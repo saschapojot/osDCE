@@ -9,9 +9,9 @@ from pathlib import Path
 #This script uses operator splitting to compute time evolution
 
 
-N1=10
-N2=20
-L1=2
+N1=3000
+N2=5000
+L1=10
 L2=80
 dx1=2*L1/N1
 dx2=2*L2/N2
@@ -21,16 +21,16 @@ x1ValsAllSquared=x1ValsAll**2
 x2ValsAllSquared=x2ValsAll**2
 
 k1ValsAll=[]
-for n1 in range(0,int(N1/2)+1):
+for n1 in range(0,int(N1/2)):
     k1ValsAll.append(2*np.pi/(2*L1)*n1)
-for n1 in range(int(N1/2)+1,N1):
+for n1 in range(int(N1/2),N1):
     k1ValsAll.append(2*np.pi/(2*L1)*(n1-N1))
 k1ValsAll=np.array(k1ValsAll)
 k1ValsSquared=k1ValsAll**2
 k2ValsAll=[]
-for n2 in range(0,int(N2/2)+1):
+for n2 in range(0,int(N2/2)):
     k2ValsAll.append(2*np.pi/(2*L2)*n2)
-for n2 in range(int(N2/2)+1,N2):
+for n2 in range(int(N2/2),N2):
     k2ValsAll.append(2*np.pi/(2*L2)*(n2-N2))
 k2ValsAll=np.array(k2ValsAll)
 k2ValsSquared=k2ValsAll**2
@@ -41,7 +41,7 @@ if len(sys.argv)!=3:
 group=int(sys.argv[1])
 rowNum=int(sys.argv[2])
 inParamFileName="./inParamsNew"+str(group)+".csv"
-
+#read parameters from csv
 dfstr=pd.read_csv(inParamFileName)
 oneRow=dfstr.iloc[rowNum,:]
 
@@ -58,7 +58,7 @@ thetaCoef=float(oneRow.loc["thetaCoef"])
 theta=thetaCoef*np.pi
 Deltam=omegam-omegap
 e2r=er**2
-lmd=(e2r-1/e2r)/(e2r+1/e2r)
+lmd=(e2r-1/e2r)/(e2r+1/e2r)*Deltam
 
 # print("j1H"+str(j1H)+"j2H"+str(j2H)+"g0"+str(g0)\
 #       +"omegam"+str(omegam)+"omegap"+str(omegap)+"omegac"+str(omegac)+"er"+str(er)+"thetaCoef"+str(thetaCoef))
@@ -179,7 +179,7 @@ def evolution1Step(j,psi):
 
     fx1n1Vec=[f(n1,tj) for n1 in range(0,N1)]
     matTmp=np.array(np.outer(fx1n1Vec,k2ValsAll),dtype=complex)
-    matTmp*=-1j*dt
+    matTmp*=1j*dt
 
     M=np.exp(matTmp)
 
@@ -209,7 +209,7 @@ def oneFlush(psiIn,fls):
 
     outFile = outDir + "flush" + str(fls) + "N1" + str(N1)\
               +"N2" + str(N2) + "L1" + str(L1)\
-              +"L2" + str(L2) + "solution.bin"
+              +"L2" + str(L2) + "solution.pkl"
     with open(outFile,"wb") as fptr:
         pickle.dump(psiMat,fptr,pickle.HIGHEST_PROTOCOL)
 
@@ -224,7 +224,7 @@ for fls in range(0,flushNum):
     psiFinal=oneFlush(psiStart,fls)
     tFlsEnd=datetime.now()
     print("one flush time: ",tFlsEnd-tFlsStart)
-    psiStart=psiFinal
+    psiStart=copy.deepcopy(psiFinal)
 
 
 
