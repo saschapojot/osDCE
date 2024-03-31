@@ -71,14 +71,14 @@ tMatStart=datetime.now()
 
 #construct number operators
 #construct H6
-leftMat=sparse.diags(-2*np.ones(N1),offsets=0,format="lil",dtype=complex)\
-    +sparse.diags(np.ones(N1-1),offsets=1,format="lil",dtype=complex)\
-    +sparse.diags(np.ones(N1-1),offsets=-1,format="lil",dtype=complex)
+leftMat=sparse.diags(-2*np.ones(N1),offsets=0,format="csc",dtype=complex)\
+    +sparse.diags(np.ones(N1-1),offsets=1,format="csc",dtype=complex)\
+    +sparse.diags(np.ones(N1-1),offsets=-1,format="csc",dtype=complex)
 
-H6=-1/(2*dx1**2)*sparse.kron(leftMat,sparse.eye(N2,dtype=complex,format="lil"),format="lil")
+H6=-1/(2*dx1**2)*sparse.kron(leftMat,sparse.eye(N2,dtype=complex,format="csc"),format="csc")
 #compute <Nc>
-tmp0=sparse.diags(x1ValsAll**2,format="lil")
-IN2=sparse.eye(N2,dtype=complex,format="lil")
+tmp0=sparse.diags(x1ValsAll**2,format="csc")
+IN2=sparse.eye(N2,dtype=complex,format="csc")
 NcMat1=sparse.kron(tmp0,IN2)
 
 # compute Nm
@@ -86,7 +86,7 @@ S2=sparse.diags(np.power(x2ValsAll,2),format="csc")
 Q2=sparse.diags(-2*np.ones(N2),offsets=0,format="csc",dtype=complex)\
     +sparse.diags(np.ones(N2-1),offsets=1,format="csc",dtype=complex)\
     +sparse.diags(np.ones(N2-1),offsets=-1,format="csc",dtype=complex)
-IN1=sparse.eye(N1,dtype=complex,format="lil")
+IN1=sparse.eye(N1,dtype=complex,format="csc")
 NmPart1=sparse.kron(IN1,S2)
 NmPart2=sparse.kron(IN1,Q2)
 

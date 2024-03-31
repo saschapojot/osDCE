@@ -53,6 +53,8 @@ if N1 %2==1:
     N1+=1
 print("N1="+str(N1))
 dx1=2*L1/N1
+print("minGrid1="+str(minGrid1))
+print("dx1="+str(dx1))
 dx2=2*L2/N2
 x1ValsAll=np.array([-L1+dx1*n1 for n1 in range(0,N1)])
 x2ValsAll=np.array([-L2+dx2*n2 for n2 in range(0,N2)])
@@ -100,10 +102,10 @@ f2Vec=np.array([f2(x2) for x2 in x2ValsAll])
 
 psi0=np.outer(f1Vec,f2Vec)
 psi0/=np.linalg.norm(psi0,ord=2)
-dtEst = 0.002
+dtEst = 0.0001
 tFlushStart=0
-tFlushStop=0.01
-flushNum=1
+tFlushStop=0.001
+flushNum=10
 tTotPerFlush=tFlushStop-tFlushStart
 
 stepsPerFlush=int(np.ceil(tTotPerFlush/dtEst))
@@ -114,7 +116,7 @@ for fls in range(0,flushNum):
     startingInd = fls * stepsPerFlush
     for j in range(0,stepsPerFlush):
         timeValsAll.append(startingInd+j)
-print(timeValsAll)
+# print(timeValsAll)
 timeValsAll=np.array(timeValsAll)*dt
 
 outDir="./groupNew"+str(group)+"/row"+str(rowNum)+"/"
