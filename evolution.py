@@ -7,34 +7,7 @@ import copy
 import pickle
 from pathlib import Path
 #This script uses operator splitting to compute time evolution
-
-
-N1=3000
-N2=5000
-L1=10
-L2=80
-dx1=2*L1/N1
-dx2=2*L2/N2
-x1ValsAll=np.array([-L1+dx1*n1 for n1 in range(0,N1)])
-x2ValsAll=np.array([-L2+dx2*n2 for n2 in range(0,N2)])
-x1ValsAllSquared=x1ValsAll**2
-x2ValsAllSquared=x2ValsAll**2
-
-k1ValsAll=[]
-for n1 in range(0,int(N1/2)):
-    k1ValsAll.append(2*np.pi/(2*L1)*n1)
-for n1 in range(int(N1/2),N1):
-    k1ValsAll.append(2*np.pi/(2*L1)*(n1-N1))
-k1ValsAll=np.array(k1ValsAll)
-k1ValsSquared=k1ValsAll**2
-k2ValsAll=[]
-for n2 in range(0,int(N2/2)):
-    k2ValsAll.append(2*np.pi/(2*L2)*n2)
-for n2 in range(int(N2/2),N2):
-    k2ValsAll.append(2*np.pi/(2*L2)*(n2-N2))
-k2ValsAll=np.array(k2ValsAll)
-k2ValsSquared=k2ValsAll**2
-#python readCSV.py groupNum rowNum, then parse csv
+# python readCSV.py groupNum rowNum, then parse csv
 if len(sys.argv)!=3:
     print("wrong number of arguments")
 
@@ -62,6 +35,44 @@ lmd=(e2r-1/e2r)/(e2r+1/e2r)*Deltam
 
 # print("j1H"+str(j1H)+"j2H"+str(j2H)+"g0"+str(g0)\
 #       +"omegam"+str(omegam)+"omegap"+str(omegap)+"omegac"+str(omegac)+"er"+str(er)+"thetaCoef"+str(thetaCoef))
+
+
+# N1=80
+
+N2=5000
+
+height1=1/2
+width1=(-2*np.log(height1)/omegac)**(1/2)
+minGrid1=width1/20
+
+L1=5
+L2=80
+
+N1=int(np.ceil(L1*2/minGrid1))
+if N1 %2==1:
+    N1+=1
+print("N1="+str(N1))
+dx1=2*L1/N1
+dx2=2*L2/N2
+x1ValsAll=np.array([-L1+dx1*n1 for n1 in range(0,N1)])
+x2ValsAll=np.array([-L2+dx2*n2 for n2 in range(0,N2)])
+x1ValsAllSquared=x1ValsAll**2
+x2ValsAllSquared=x2ValsAll**2
+
+k1ValsAll=[]
+for n1 in range(0,int(N1/2)):
+    k1ValsAll.append(2*np.pi/(2*L1)*n1)
+for n1 in range(int(N1/2),N1):
+    k1ValsAll.append(2*np.pi/(2*L1)*(n1-N1))
+k1ValsAll=np.array(k1ValsAll)
+k1ValsSquared=k1ValsAll**2
+k2ValsAll=[]
+for n2 in range(0,int(N2/2)):
+    k2ValsAll.append(2*np.pi/(2*L2)*n2)
+for n2 in range(int(N2/2),N2):
+    k2ValsAll.append(2*np.pi/(2*L2)*(n2-N2))
+k2ValsAll=np.array(k2ValsAll)
+k2ValsSquared=k2ValsAll**2
 
 
 def H(n,x):
@@ -92,7 +103,7 @@ psi0/=np.linalg.norm(psi0,ord=2)
 dtEst = 0.002
 tFlushStart=0
 tFlushStop=0.01
-flushNum=5
+flushNum=1
 tTotPerFlush=tFlushStop-tFlushStart
 
 stepsPerFlush=int(np.ceil(tTotPerFlush/dtEst))
@@ -103,8 +114,9 @@ for fls in range(0,flushNum):
     startingInd = fls * stepsPerFlush
     for j in range(0,stepsPerFlush):
         timeValsAll.append(startingInd+j)
+print(timeValsAll)
+timeValsAll=np.array(timeValsAll)*dt
 
-timeIndsAll=np.array(timeValsAll)*dt
 outDir="./groupNew"+str(group)+"/row"+str(rowNum)+"/"
 Path(outDir).mkdir(parents=True, exist_ok=True)
 def f(n1,t):
@@ -183,6 +195,7 @@ def evolution1Step(j,psi):
 
     M=np.exp(matTmp)
 
+
     W=W*M
 
     psi=np.fft.ifft(W,axis=1,norm="ortho")
@@ -204,7 +217,8 @@ def oneFlush(psiIn,fls):
     psiMat[0,:,:]=copy.deepcopy(psiIn)
     for j in range(0,stepsPerFlush):
         indCurr=startingInd+j
-        psiNext=evolution1Step(indCurr,copy.deepcopy(psiMat[j,:,:]))
+        psiCurr=copy.deepcopy(psiMat[j,:,:])
+        psiNext=evolution1Step(indCurr,psiCurr)
         psiMat[j+1,:,:]=copy.deepcopy(psiNext)
 
     outFile = outDir + "flush" + str(fls) + "N1" + str(N1)\
@@ -213,7 +227,7 @@ def oneFlush(psiIn,fls):
     with open(outFile,"wb") as fptr:
         pickle.dump(psiMat,fptr,pickle.HIGHEST_PROTOCOL)
 
-    return psiMat[-1,:,:]
+    return copy.deepcopy(psiMat[-1,:,:])
 
 
 
