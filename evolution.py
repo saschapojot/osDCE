@@ -7,41 +7,14 @@ import copy
 import pickle
 from pathlib import Path
 #This script uses operator splitting to compute time evolution
-
-
-N1=10
-N2=20
-L1=2
-L2=80
-dx1=2*L1/N1
-dx2=2*L2/N2
-x1ValsAll=np.array([-L1+dx1*n1 for n1 in range(0,N1)])
-x2ValsAll=np.array([-L2+dx2*n2 for n2 in range(0,N2)])
-x1ValsAllSquared=x1ValsAll**2
-x2ValsAllSquared=x2ValsAll**2
-
-k1ValsAll=[]
-for n1 in range(0,int(N1/2)+1):
-    k1ValsAll.append(2*np.pi/(2*L1)*n1)
-for n1 in range(int(N1/2)+1,N1):
-    k1ValsAll.append(2*np.pi/(2*L1)*(n1-N1))
-k1ValsAll=np.array(k1ValsAll)
-k1ValsSquared=k1ValsAll**2
-k2ValsAll=[]
-for n2 in range(0,int(N2/2)+1):
-    k2ValsAll.append(2*np.pi/(2*L2)*n2)
-for n2 in range(int(N2/2)+1,N2):
-    k2ValsAll.append(2*np.pi/(2*L2)*(n2-N2))
-k2ValsAll=np.array(k2ValsAll)
-k2ValsSquared=k2ValsAll**2
-#python readCSV.py groupNum rowNum, then parse csv
+# python readCSV.py groupNum rowNum, then parse csv
 if len(sys.argv)!=3:
     print("wrong number of arguments")
 
 group=int(sys.argv[1])
 rowNum=int(sys.argv[2])
 inParamFileName="./inParamsNew"+str(group)+".csv"
-
+#read parameters from csv
 dfstr=pd.read_csv(inParamFileName)
 oneRow=dfstr.iloc[rowNum,:]
 
@@ -58,10 +31,50 @@ thetaCoef=float(oneRow.loc["thetaCoef"])
 theta=thetaCoef*np.pi
 Deltam=omegam-omegap
 e2r=er**2
-lmd=(e2r-1/e2r)/(e2r+1/e2r)
+lmd=(e2r-1/e2r)/(e2r+1/e2r)*Deltam
 
 # print("j1H"+str(j1H)+"j2H"+str(j2H)+"g0"+str(g0)\
 #       +"omegam"+str(omegam)+"omegap"+str(omegap)+"omegac"+str(omegac)+"er"+str(er)+"thetaCoef"+str(thetaCoef))
+
+
+# N1=80
+
+N2=5000
+
+height1=1/2
+width1=(-2*np.log(height1)/omegac)**(1/2)
+minGrid1=width1/20
+
+L1=5
+L2=80
+
+N1=int(np.ceil(L1*2/minGrid1))
+if N1 %2==1:
+    N1+=1
+print("N1="+str(N1))
+dx1=2*L1/N1
+print("minGrid1="+str(minGrid1))
+print("dx1="+str(dx1))
+dx2=2*L2/N2
+x1ValsAll=np.array([-L1+dx1*n1 for n1 in range(0,N1)])
+x2ValsAll=np.array([-L2+dx2*n2 for n2 in range(0,N2)])
+x1ValsAllSquared=x1ValsAll**2
+x2ValsAllSquared=x2ValsAll**2
+
+k1ValsAll=[]
+for n1 in range(0,int(N1/2)):
+    k1ValsAll.append(2*np.pi/(2*L1)*n1)
+for n1 in range(int(N1/2),N1):
+    k1ValsAll.append(2*np.pi/(2*L1)*(n1-N1))
+k1ValsAll=np.array(k1ValsAll)
+k1ValsSquared=k1ValsAll**2
+k2ValsAll=[]
+for n2 in range(0,int(N2/2)):
+    k2ValsAll.append(2*np.pi/(2*L2)*n2)
+for n2 in range(int(N2/2),N2):
+    k2ValsAll.append(2*np.pi/(2*L2)*(n2-N2))
+k2ValsAll=np.array(k2ValsAll)
+k2ValsSquared=k2ValsAll**2
 
 
 def H(n,x):
@@ -89,10 +102,10 @@ f2Vec=np.array([f2(x2) for x2 in x2ValsAll])
 
 psi0=np.outer(f1Vec,f2Vec)
 psi0/=np.linalg.norm(psi0,ord=2)
-dtEst = 0.002
+dtEst = 0.0001
 tFlushStart=0
-tFlushStop=0.01
-flushNum=5
+tFlushStop=0.001
+flushNum=10
 tTotPerFlush=tFlushStop-tFlushStart
 
 stepsPerFlush=int(np.ceil(tTotPerFlush/dtEst))
@@ -103,8 +116,9 @@ for fls in range(0,flushNum):
     startingInd = fls * stepsPerFlush
     for j in range(0,stepsPerFlush):
         timeValsAll.append(startingInd+j)
+# print(timeValsAll)
+timeValsAll=np.array(timeValsAll)*dt
 
-timeIndsAll=np.array(timeValsAll)*dt
 outDir="./groupNew"+str(group)+"/row"+str(rowNum)+"/"
 Path(outDir).mkdir(parents=True, exist_ok=True)
 def f(n1,t):
@@ -179,9 +193,10 @@ def evolution1Step(j,psi):
 
     fx1n1Vec=[f(n1,tj) for n1 in range(0,N1)]
     matTmp=np.array(np.outer(fx1n1Vec,k2ValsAll),dtype=complex)
-    matTmp*=-1j*dt
+    matTmp*=1j*dt
 
     M=np.exp(matTmp)
+
 
     W=W*M
 
@@ -204,16 +219,17 @@ def oneFlush(psiIn,fls):
     psiMat[0,:,:]=copy.deepcopy(psiIn)
     for j in range(0,stepsPerFlush):
         indCurr=startingInd+j
-        psiNext=evolution1Step(indCurr,copy.deepcopy(psiMat[j,:,:]))
+        psiCurr=copy.deepcopy(psiMat[j,:,:])
+        psiNext=evolution1Step(indCurr,psiCurr)
         psiMat[j+1,:,:]=copy.deepcopy(psiNext)
 
     outFile = outDir + "flush" + str(fls) + "N1" + str(N1)\
               +"N2" + str(N2) + "L1" + str(L1)\
-              +"L2" + str(L2) + "solution.bin"
+              +"L2" + str(L2) + "solution.pkl"
     with open(outFile,"wb") as fptr:
         pickle.dump(psiMat,fptr,pickle.HIGHEST_PROTOCOL)
 
-    return psiMat[-1,:,:]
+    return copy.deepcopy(psiMat[-1,:,:])
 
 
 
@@ -224,7 +240,7 @@ for fls in range(0,flushNum):
     psiFinal=oneFlush(psiStart,fls)
     tFlsEnd=datetime.now()
     print("one flush time: ",tFlsEnd-tFlsStart)
-    psiStart=psiFinal
+    psiStart=copy.deepcopy(psiFinal)
 
 
 
