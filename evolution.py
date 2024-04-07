@@ -43,16 +43,18 @@ N2=5000
 
 height1=1/2
 width1=(-2*np.log(height1)/omegac)**(1/2)
-minGrid1=width1/20
+minGrid1=width1/10
 
-L1=5
-L2=80
+L1=0.5
+L2=0.8
 
 N1=int(np.ceil(L1*2/minGrid1))
 if N1 %2==1:
     N1+=1
 print("N1="+str(N1))
+N1=9000
 dx1=2*L1/N1
+print("N1="+str(N1))
 print("minGrid1="+str(minGrid1))
 print("dx1="+str(dx1))
 dx2=2*L2/N2
@@ -102,6 +104,8 @@ f2Vec=np.array([f2(x2) for x2 in x2ValsAll])
 
 psi0=np.outer(f1Vec,f2Vec)
 psi0/=np.linalg.norm(psi0,ord=2)
+
+print(psi0)
 dtEst = 0.0001
 tFlushStart=0
 tFlushStop=0.001
@@ -144,6 +148,7 @@ def evolution1Step(j,psi):
     :return:
     """
     tj=timeValsAll[j]
+    t1StepStart=datetime.now()
     ######################## exp(-idt H1)
     #operator U15
     for n2 in range(0,N2):
@@ -201,6 +206,8 @@ def evolution1Step(j,psi):
     W=W*M
 
     psi=np.fft.ifft(W,axis=1,norm="ortho")
+    t1StepEnd=datetime.now()
+    print("1 step time: ",t1StepEnd-t1StepStart)
 
     return psi
 
