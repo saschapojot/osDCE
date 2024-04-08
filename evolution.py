@@ -6,7 +6,12 @@ from scipy.special import hermite
 import copy
 import pickle
 from pathlib import Path
-#This script uses operator splitting to compute time evolution
+from scipy import sparse
+import json
+
+
+#This script uses operator splitting to compute time evolution,
+# and computes pariticle number, saves initial state and final state
 # python readCSV.py groupNum rowNum, then parse csv
 if len(sys.argv)!=3:
     print("wrong number of arguments")
@@ -45,16 +50,16 @@ height1=1/2
 width1=(-2*np.log(height1)/omegac)**(1/2)
 minGrid1=width1/10
 
-L1=0.5
-L2=0.8
+L1=5
+L2=80
 
 N1=int(np.ceil(L1*2/minGrid1))
 if N1 %2==1:
     N1+=1
 print("N1="+str(N1))
-N1=9000
+# N1=9000
 dx1=2*L1/N1
-print("N1="+str(N1))
+
 print("minGrid1="+str(minGrid1))
 print("dx1="+str(dx1))
 dx2=2*L2/N2
@@ -210,8 +215,49 @@ def evolution1Step(j,psi):
     print("1 step time: ",t1StepEnd-t1StepStart)
 
     return psi
+tMatStart=datetime.now()
 
+#construct matrices
 
+#construct number operators
+#construct H6
+leftMat=sparse.diags(-2*np.ones(N1),offsets=0,format="csc",dtype=complex)\
+    +sparse.diags(np.ones(N1-1),offsets=1,format="csc",dtype=complex)\
+    +sparse.diags(np.ones(N1-1),offsets=-1,format="csc",dtype=complex)
+
+H6=-1/(2*dx1**2)*sparse.kron(leftMat,sparse.eye(N2,dtype=complex,format="csc"),format="csc")
+#compute <Nc>
+tmp0=sparse.diags(x1ValsAll**2,format="csc")
+IN2=sparse.eye(N2,dtype=complex,format="csc")
+NcMat1=sparse.kron(tmp0,IN2)
+# compute Nm
+S2=sparse.diags(np.power(x2ValsAll,2),format="csc")
+Q2=sparse.diags(-2*np.ones(N2),offsets=0,format="csc",dtype=complex)\
+    +sparse.diags(np.ones(N2-1),offsets=1,format="csc",dtype=complex)\
+    +sparse.diags(np.ones(N2-1),offsets=-1,format="csc",dtype=complex)
+IN1=sparse.eye(N1,dtype=complex,format="csc")
+NmPart1=sparse.kron(IN1,S2)
+NmPart2=sparse.kron(IN1,Q2)
+
+tMatEnd=datetime.now()
+print("construct mat time: ",tMatEnd-tMatStart)
+def avgNc(Psi):
+    """
+
+    :param Psi: wavefunction
+    :return: number of photons for wavefunction
+    """
+    val=1/2*omegac*np.vdot(Psi,NcMat1@Psi)-1/2*np.vdot(Psi,Psi)+1/omegac*np.vdot(Psi,H6@Psi)
+    return np.abs(val)
+
+def avgNm(Psi):
+    """
+    :param Psi: wavefunction
+    :return: number of phonons for wavefunction
+    """
+    val=1/2*omegam*np.vdot(Psi,NmPart1@Psi)-1/2*np.vdot(Psi,Psi)-1/(2*omegam*dx2**2)*np.vdot(Psi,NmPart2@Psi)
+
+    return np.abs(val)
 def oneFlush(psiIn,fls):
     """
 
@@ -221,27 +267,42 @@ def oneFlush(psiIn,fls):
     """
     startingInd = fls * stepsPerFlush
 
-    psiMat=np.zeros((stepsPerFlush+1,N1,N2),dtype=complex)
+    # psiMat=np.zeros((stepsPerFlush+1,N1,N2),dtype=complex)
 
-    psiMat[0,:,:]=copy.deepcopy(psiIn)
+    # psiMat[0,:,:]=copy.deepcopy(psiIn)
+    psiCurr=copy.deepcopy(psiIn)
+    photonPerFlush=[avgNc(psiCurr)]
+    phononPerFlush=[avgNm(psiCurr)]
     for j in range(0,stepsPerFlush):
         indCurr=startingInd+j
-        psiCurr=copy.deepcopy(psiMat[j,:,:])
+
         psiNext=evolution1Step(indCurr,psiCurr)
-        psiMat[j+1,:,:]=copy.deepcopy(psiNext)
+        psiCurr=copy.deepcopy(psiNext)
+        photonPerFlush.append(avgNc(psiCurr))
+        phononPerFlush.append(avgNm(psiCurr))
 
     outFile = outDir + "flush" + str(fls) + "N1" + str(N1)\
               +"N2" + str(N2) + "L1" + str(L1)\
+              +"L2" + str(L2) + "num.json"
+    outData={
+        "photonNums":photonPerFlush,
+        "phononNums":phononPerFlush
+    }
+    with open(outFile, "w") as fptr:
+        json.dump(outData, fptr)
+
+    return psiCurr
+
+outPsiInit = outDir + "init"  + "N1" + str(N1)\
+              +"N2" + str(N2) + "L1" + str(L1)\
               +"L2" + str(L2) + "solution.pkl"
-    with open(outFile,"wb") as fptr:
-        pickle.dump(psiMat,fptr,pickle.HIGHEST_PROTOCOL)
-
-    return copy.deepcopy(psiMat[-1,:,:])
-
-
-
+outPsiFinal = outDir + "final"  + "N1" + str(N1)\
+              +"N2" + str(N2) + "L1" + str(L1)\
+              +"L2" + str(L2) + "solution.pkl"
 #evolution
 psiStart=copy.deepcopy(psi0)
+with open(outPsiInit,"wb") as fptr:
+    pickle.dump(psiStart,fptr,protocol=pickle.HIGHEST_PROTOCOL)
 for fls in range(0,flushNum):
     tFlsStart=datetime.now()
     psiFinal=oneFlush(psiStart,fls)
@@ -250,5 +311,6 @@ for fls in range(0,flushNum):
     psiStart=copy.deepcopy(psiFinal)
 
 
-
+with open(outPsiFinal,"wb") as fptr:
+    pickle.dump(psiStart,fptr,protocol=pickle.HIGHEST_PROTOCOL)
 
