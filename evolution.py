@@ -247,6 +247,7 @@ def avgNc(Psi):
     :param Psi: wavefunction
     :return: number of photons for wavefunction
     """
+    Psi=np.reshape(Psi,-1)
     val=1/2*omegac*np.vdot(Psi,NcMat1@Psi)-1/2*np.vdot(Psi,Psi)+1/omegac*np.vdot(Psi,H6@Psi)
     return np.abs(val)
 
@@ -255,6 +256,7 @@ def avgNm(Psi):
     :param Psi: wavefunction
     :return: number of phonons for wavefunction
     """
+    Psi = np.reshape(Psi, -1)
     val=1/2*omegam*np.vdot(Psi,NmPart1@Psi)-1/2*np.vdot(Psi,Psi)-1/(2*omegam*dx2**2)*np.vdot(Psi,NmPart2@Psi)
 
     return np.abs(val)
