@@ -109,6 +109,7 @@ f2Vec=np.array([f2(x2) for x2 in x2ValsAll])
 
 psi0=np.outer(f1Vec,f2Vec)
 psi0/=np.linalg.norm(psi0,ord=2)
+psi0=np.array(psi0,dtype=complex)
 
 print(psi0)
 dtEst = 0.0001
