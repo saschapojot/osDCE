@@ -111,11 +111,11 @@ psi0=np.outer(f1Vec,f2Vec)
 psi0/=np.linalg.norm(psi0,ord=2)
 psi0=np.array(psi0,dtype=complex)
 
-print(psi0)
+# print(psi0)
 dtEst = 0.0001
 tFlushStart=0
 tFlushStop=0.001
-flushNum=10
+flushNum=4
 tTotPerFlush=tFlushStop-tFlushStart
 
 stepsPerFlush=int(np.ceil(tTotPerFlush/dtEst))
@@ -154,7 +154,7 @@ def evolution1Step(j,psi):
     :return:
     """
     tj=timeValsAll[j]
-    t1StepStart=datetime.now()
+    # t1StepStart=datetime.now()
     ######################## exp(-idt H1)
     #operator U15
     for n2 in range(0,N2):
@@ -212,8 +212,8 @@ def evolution1Step(j,psi):
     W=W*M
 
     psi=np.fft.ifft(W,axis=1,norm="ortho")
-    t1StepEnd=datetime.now()
-    print("1 step time: ",t1StepEnd-t1StepStart)
+    # t1StepEnd=datetime.now()
+    # print("1 step time: ",t1StepEnd-t1StepStart)
 
     return psi
 tMatStart=datetime.now()
@@ -248,8 +248,8 @@ def avgNc(Psi):
     :param Psi: wavefunction
     :return: number of photons for wavefunction
     """
-    Psi=np.reshape(Psi,-1)
-    val=1/2*omegac*np.vdot(Psi,NcMat1@Psi)-1/2*np.vdot(Psi,Psi)+1/omegac*np.vdot(Psi,H6@Psi)
+    psiVec=np.reshape(Psi,-1)
+    val=1/2*omegac*np.vdot(psiVec,NcMat1@psiVec)-1/2*np.vdot(psiVec,psiVec)+1/omegac*np.vdot(psiVec,H6@psiVec)
     return np.abs(val)
 
 def avgNm(Psi):
@@ -257,8 +257,8 @@ def avgNm(Psi):
     :param Psi: wavefunction
     :return: number of phonons for wavefunction
     """
-    Psi = np.reshape(Psi, -1)
-    val=1/2*omegam*np.vdot(Psi,NmPart1@Psi)-1/2*np.vdot(Psi,Psi)-1/(2*omegam*dx2**2)*np.vdot(Psi,NmPart2@Psi)
+    psiVec=np.reshape(Psi,-1)
+    val=1/2*omegam*np.vdot(psiVec,NmPart1@psiVec)-1/2*np.vdot(psiVec,psiVec)-1/(2*omegam*dx2**2)*np.vdot(psiVec,NmPart2@psiVec)
 
     return np.abs(val)
 def oneFlush(psiIn,fls):
