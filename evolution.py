@@ -113,10 +113,12 @@ psi0/=np.linalg.norm(psi0,ord=2)
 psi0=np.array(psi0,dtype=complex)
 
 # print(psi0)
-dtEst = 0.000025
+
+dtEst = 0.0001
+
 tFlushStart=0
 tFlushStop=0.001
-flushNum=10
+flushNum=4
 tTotPerFlush=tFlushStop-tFlushStart
 
 stepsPerFlush=int(np.ceil(tTotPerFlush/dtEst))
@@ -155,7 +157,7 @@ def evolution1Step(j,psi):
     :return:
     """
     tj=timeValsAll[j]
-    t1StepStart=datetime.now()
+    # t1StepStart=datetime.now()
     ######################## exp(-idt H1)
     #operator U15
     for n2 in range(0,N2):
@@ -213,7 +215,9 @@ def evolution1Step(j,psi):
     W=W*M
 
     psi=np.fft.ifft(W,axis=1,norm="ortho")
+
     t1StepEnd=datetime.now()
+
     # print("1 step time: ",t1StepEnd-t1StepStart)
 
     return psi
