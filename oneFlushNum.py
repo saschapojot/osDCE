@@ -43,11 +43,11 @@ inDir="./groupNew"+str(groupNum)+"/row"+str(rowNum)+"/"
 
 pklFile=""
 
-for file in glob.glob(inDir+"/*.pkl"):
+for file in glob.glob(inDir+"/*.bin"):
     matchFlsh=re.search(r"flush"+str(flshNum)+"N1",file)
     if matchFlsh:
         pklFile=file
-
+print(pklFile)
 matchN1=re.search(r"N1(\d+)N2",pklFile)
 N1=int(matchN1.group(1))
 

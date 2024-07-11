@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -42,16 +43,15 @@ lmd=(e2r-1/e2r)/(e2r+1/e2r)*Deltam
 #       +"omegam"+str(omegam)+"omegap"+str(omegap)+"omegac"+str(omegac)+"er"+str(er)+"thetaCoef"+str(thetaCoef))
 
 
-# N1=80
+# N1=800
 
 N2=5000
 
 height1=1/2
 width1=(-2*np.log(height1)/omegac)**(1/2)
 minGrid1=width1/10
-
 L1=5
-L2=80
+L2=40
 
 N1=int(np.ceil(L1*2/minGrid1))
 if N1 %2==1:
@@ -60,9 +60,10 @@ print("N1="+str(N1))
 # N1=9000
 dx1=2*L1/N1
 
-print("minGrid1="+str(minGrid1))
+# print("minGrid1="+str(minGrid1))
 print("dx1="+str(dx1))
 dx2=2*L2/N2
+print("dx2="+str(dx2))
 x1ValsAll=np.array([-L1+dx1*n1 for n1 in range(0,N1)])
 x2ValsAll=np.array([-L2+dx2*n2 for n2 in range(0,N2)])
 x1ValsAllSquared=x1ValsAll**2
@@ -111,8 +112,8 @@ psi0=np.outer(f1Vec,f2Vec)
 psi0/=np.linalg.norm(psi0,ord=2)
 psi0=np.array(psi0,dtype=complex)
 
-print(psi0)
-dtEst = 0.0001
+# print(psi0)
+dtEst = 0.000025
 tFlushStart=0
 tFlushStop=0.001
 flushNum=10
@@ -213,7 +214,7 @@ def evolution1Step(j,psi):
 
     psi=np.fft.ifft(W,axis=1,norm="ortho")
     t1StepEnd=datetime.now()
-    print("1 step time: ",t1StepEnd-t1StepStart)
+    # print("1 step time: ",t1StepEnd-t1StepStart)
 
     return psi
 tMatStart=datetime.now()
@@ -248,8 +249,8 @@ def avgNc(Psi):
     :param Psi: wavefunction
     :return: number of photons for wavefunction
     """
-    Psi=np.reshape(Psi,-1)
-    val=1/2*omegac*np.vdot(Psi,NcMat1@Psi)-1/2*np.vdot(Psi,Psi)+1/omegac*np.vdot(Psi,H6@Psi)
+    psiVec=np.reshape(Psi,-1)
+    val=1/2*omegac*np.vdot(psiVec,NcMat1@psiVec)-1/2*np.vdot(psiVec,psiVec)+1/omegac*np.vdot(psiVec,H6@psiVec)
     return np.abs(val)
 
 def avgNm(Psi):
@@ -257,8 +258,8 @@ def avgNm(Psi):
     :param Psi: wavefunction
     :return: number of phonons for wavefunction
     """
-    Psi = np.reshape(Psi, -1)
-    val=1/2*omegam*np.vdot(Psi,NmPart1@Psi)-1/2*np.vdot(Psi,Psi)-1/(2*omegam*dx2**2)*np.vdot(Psi,NmPart2@Psi)
+    psiVec=np.reshape(Psi,-1)
+    val=1/2*omegam*np.vdot(psiVec,NmPart1@psiVec)-1/2*np.vdot(psiVec,psiVec)-1/(2*omegam*dx2**2)*np.vdot(psiVec,NmPart2@psiVec)
 
     return np.abs(val)
 def oneFlush(psiIn,fls):
@@ -304,6 +305,7 @@ outPsiFinal = outDir + "final"  + "N1" + str(N1)\
               +"L2" + str(L2) + "solution.pkl"
 #evolution
 psiStart=copy.deepcopy(psi0)
+np.savetxt(outDir+"/psiInit.csv",psiStart,delimiter=",")
 with open(outPsiInit,"wb") as fptr:
     pickle.dump(psiStart,fptr,protocol=pickle.HIGHEST_PROTOCOL)
 for fls in range(0,flushNum):
@@ -313,7 +315,13 @@ for fls in range(0,flushNum):
     print("one flush time: ",tFlsEnd-tFlsStart)
     psiStart=copy.deepcopy(psiFinal)
 
-
+np.savetxt(outDir+"/psiFinal.csv",psiFinal,delimiter=",")
 with open(outPsiFinal,"wb") as fptr:
     pickle.dump(psiStart,fptr,protocol=pickle.HIGHEST_PROTOCOL)
 
+plt.figure()
+plt.imshow(np.abs(psiFinal))
+plt.title("final")
+plt.colorbar()
+plt.savefig(outDir+"psiFinal.png")
+plt.close()
