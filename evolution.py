@@ -118,7 +118,7 @@ dtEst = 0.0001
 
 tFlushStart=0
 tFlushStop=0.001
-flushNum=4
+flushNum=3000
 tTotPerFlush=tFlushStop-tFlushStart
 
 stepsPerFlush=int(np.ceil(tTotPerFlush/dtEst))
