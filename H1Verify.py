@@ -41,13 +41,13 @@ lmd=(e2r-1/e2r)/(e2r+1/e2r)*Deltam
 #       +"omegam"+str(omegam)+"omegap"+str(omegap)+"omegac"+str(omegac)+"er"+str(er)+"thetaCoef"+str(thetaCoef))
 
 
-N2=50
+N2=5000
 height1=1/2
 width1=(-2*np.log(height1)/omegac)**(1/2)
 minGrid1=width1/50
 
-L1=0.5
-L2=0.8
+L1=5
+L2=80
 
 N1=int(np.ceil(L1*2/minGrid1))
 if N1 %2==1:
@@ -65,22 +65,22 @@ x2ValsAll=np.array([-L2+dx2*n2 for n2 in range(0,N2)])
 x1ValsAllSquared=x1ValsAll**2
 x2ValsAllSquared=x2ValsAll**2
 
-k1ValsAll=[]
-for n1 in range(0,int(N1/2)):
-    k1ValsAll.append(2*np.pi/(2*L1)*n1)
-for n1 in range(int(N1/2),N1):
-    k1ValsAll.append(2*np.pi/(2*L1)*(n1-N1))
-k1ValsAll=np.array(k1ValsAll)
-k1ValsSquared=k1ValsAll**2
+# k1ValsAll=[]
+# for n1 in range(0,int(N1/2)):
+#     k1ValsAll.append(2*np.pi/(2*L1)*n1)
+# for n1 in range(int(N1/2),N1):
+#     k1ValsAll.append(2*np.pi/(2*L1)*(n1-N1))
+# k1ValsAll=np.array(k1ValsAll)
+# k1ValsSquared=k1ValsAll**2
 
 
-k2ValsAll=[]
-for n2 in range(0,int(N2/2)):
-    k2ValsAll.append(2*np.pi/(2*L2)*n2)
-for n2 in range(int(N2/2),N2):
-    k2ValsAll.append(2*np.pi/(2*L2)*(n2-N2))
-k2ValsAll=np.array(k2ValsAll)
-k2ValsSquared=k2ValsAll**2
+# k2ValsAll=[]
+# for n2 in range(0,int(N2/2)):
+#     k2ValsAll.append(2*np.pi/(2*L2)*n2)
+# for n2 in range(int(N2/2),N2):
+#     k2ValsAll.append(2*np.pi/(2*L2)*(n2-N2))
+# k2ValsAll=np.array(k2ValsAll)
+# k2ValsSquared=k2ValsAll**2
 
 
 
@@ -98,13 +98,13 @@ matSpace*=1j/omegap
 
 def psiAnalytical(t):
     psiTmp=np.exp(matSpace*np.sin(omegap*t))
-    psiTmp/=np.linalg.norm(psiTmp,2)
+    psiTmp/=np.linalg.norm(psiTmp,"fro")
     return psiTmp
 
 dtEst = 0.0001
 tFlushStart=0
 tFlushStop=0.001
-flushNum=4
+flushNum=4000
 tTotPerFlush=tFlushStop-tFlushStart
 
 stepsPerFlush=int(np.ceil(tTotPerFlush/dtEst))
@@ -117,7 +117,8 @@ for fls in range(0,flushNum):
         timeValsAll.append(startingInd+j)
 # print(timeValsAll)
 timeValsAll=np.array(timeValsAll)*dt
-
+outDir="./groupNew"+str(group)+"/row"+str(rowNum)+"/H1Verify/"
+Path(outDir).mkdir(parents=True, exist_ok=True)
 def evolution1Step(j,psi):
     """
 
@@ -137,8 +138,44 @@ def evolution1Step(j,psi):
     #construct U14
     #construct the exponential part
     U14=np.array(np.outer(x1ValsAllSquared,x2ValsAll),dtype=complex)
+    # print("shape U14: "+str(U14.shape))
     U14*=-1j*dt*g0*omegac*np.sqrt(2*omegam)*np.cos(omegap*tj)
     U14=np.exp(U14)
-    psi=U14*psi
+    psi=np.multiply(U14,psi)
+    # print("norm U14 squared="+str(np.linalg.norm(U14,"fro")**2))
+
+    # print("norm psi="+str(np.linalg.norm(psi,"fro")))
 
     return psi
+
+
+
+
+psiNumericalCurr=psiAnalytical(0)
+
+psiAnaCurr=psiAnalytical(0)
+
+for fls in range(0,flushNum):
+    tFlushStart = datetime.now()
+    startingInd = fls * stepsPerFlush
+    diffPerFlush=[]
+    for st in range(0,stepsPerFlush):
+        j=startingInd+st
+        psiNumericalNext=evolution1Step(j,psiNumericalCurr)
+        psiNumericalCurr=psiNumericalNext
+        psiAnaCurr=psiAnalytical(timeValsAll[j]+dt)
+        diffTmp=np.linalg.norm(psiNumericalCurr-psiAnaCurr,ord=2)
+        # print("psiNumericalCurr norm="+str(np.linalg.norm(psiNumericalCurr,"fro")))
+        diffPerFlush.append(diffTmp)
+    outData={"diff":diffPerFlush}
+    outFile = outDir + "flush" + str(fls) + "N1" + str(N1) \
+              + "N2" + str(N2) + "L1" + str(L1) \
+              + "L2" + str(L2) + "diff.json"
+
+    with open(outFile,"w") as fptr:
+        json.dump(outData,fptr)
+
+    tFlushEnd = datetime.now()
+    print("flush "+str(fls)+" time: ",tFlushEnd-tFlushStart)
+
+
