@@ -21,8 +21,8 @@ inParamFileName="./inParamsNew"+str(group)+".csv"
 dfstr=pd.read_csv(inParamFileName)
 oneRow=dfstr.iloc[rowNum,:]
 
-j1H=int(oneRow.loc["j1H"])
-j2H=int(oneRow.loc["j2H"])
+# j1H=int(oneRow.loc["j1H"])
+# j2H=int(oneRow.loc["j2H"])
 
 g0=float(oneRow.loc["g0"])
 omegam=float(oneRow.loc["omegam"])
@@ -164,7 +164,7 @@ for fls in range(0,flushNum):
         psiNumericalNext=evolution1Step(j,psiNumericalCurr)
         psiNumericalCurr=psiNumericalNext
         psiAnaCurr=psiAnalytical(timeValsAll[j]+dt)
-        diffTmp=np.linalg.norm(psiNumericalCurr-psiAnaCurr,ord=2)
+        diffTmp=np.linalg.norm(psiNumericalCurr-psiAnaCurr,ord="fro")
         # print("psiNumericalCurr norm="+str(np.linalg.norm(psiNumericalCurr,"fro")))
         diffPerFlush.append(diffTmp)
     outData={"diff":diffPerFlush}
