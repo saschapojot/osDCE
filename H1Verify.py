@@ -101,7 +101,7 @@ def psiAnalytical(t):
     psiTmp/=np.linalg.norm(psiTmp,"fro")
     return psiTmp
 
-dtEst = 0.0001
+dtEst = 0.00005
 tFlushStart=0
 tFlushStop=0.001
 flushNum=4000

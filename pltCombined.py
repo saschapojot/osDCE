@@ -18,9 +18,18 @@ dt=tTotPerFlush/stepsPerFlush
 tValsAll=np.array(range(1,len(arr)+1))*dt
 
 length=len(arr)
-seg=int(length*1/4)
+seg=int(length)
 # print(np.where(arr>0.8)[0][0])
+t2plt=tValsAll[:seg]
+arr2plt=arr[:seg]
 
 plt.figure()
-plt.plot(tValsAll[:seg],arr[:seg],color="black")
-plt.savefig("tmp.png")
+plt.plot(t2plt,arr2plt,color="black")
+text_x=np.max(t2plt)*1/5
+text_y=np.max(arr2plt)*4/5
+plt.title("Difference between numerical and analytical solution")
+plt.xlabel("$t$")
+plt.ylabel("diff")
+plt.text(text_x, text_y, "$g_{0}=10$, $\omega_{m}=3$, $\omega_{c}=1$, $\omega_{p}=1$", fontsize=12, color='red')
+plt.savefig("t4.png")
+plt.close()
