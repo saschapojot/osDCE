@@ -149,7 +149,7 @@ def evolution1Step(j,psi):
     return psi
 
 
-
+tEvoStart=datetime.now()
 
 psiNumericalCurr=psiAnalytical(0)
 
@@ -179,3 +179,5 @@ for fls in range(0,flushNum):
     print("flush "+str(fls)+" time: ",tFlushEnd-tFlushStart)
 
 
+tEvoEnd=datetime.now()
+print("evo time: ",tEvoEnd-tEvoStart)
