@@ -41,7 +41,7 @@ lmd=(e2r-1/e2r)/(e2r+1/e2r)*Deltam
 #       +"omegam"+str(omegam)+"omegap"+str(omegap)+"omegac"+str(omegac)+"er"+str(er)+"thetaCoef"+str(thetaCoef))
 
 
-N2=10000
+N2=5000
 height1=1/2
 width1=(-2*np.log(height1)/omegac)**(1/2)
 minGrid1=width1/50
@@ -101,7 +101,7 @@ def psiAnalytical(t):
     psiTmp/=np.linalg.norm(psiTmp,"fro")
     return psiTmp
 
-dtEst = 15e-5
+dtEst = 1e-5
 tFlushStart=0
 tFlushStop=0.001
 flushNum=4000
