@@ -41,15 +41,16 @@ lmd=(e2r-1/e2r)/(e2r+1/e2r)*Deltam
 #       +"omegam"+str(omegam)+"omegap"+str(omegap)+"omegac"+str(omegac)+"er"+str(er)+"thetaCoef"+str(thetaCoef))
 
 
-N2=5000
+N2=2
 height1=1/2
 width1=(-2*np.log(height1)/omegac)**(1/2)
 minGrid1=width1/50
 
-L1=5
-L2=80
+L1=5/1e0
+L2=80/1e0
 
 N1=int(np.ceil(L1*2/minGrid1))
+N1=2
 if N1 %2==1:
     N1+=1
 print("N1="+str(N1))
@@ -64,7 +65,8 @@ x1ValsAll=np.array([-L1+dx1*n1 for n1 in range(0,N1)])
 x2ValsAll=np.array([-L2+dx2*n2 for n2 in range(0,N2)])
 x1ValsAllSquared=x1ValsAll**2
 x2ValsAllSquared=x2ValsAll**2
-
+print("x1ValsAll="+str(x1ValsAll))
+print("x2ValsAll="+str(x2ValsAll))
 # k1ValsAll=[]
 # for n1 in range(0,int(N1/2)):
 #     k1ValsAll.append(2*np.pi/(2*L1)*n1)
@@ -101,7 +103,7 @@ def psiAnalytical(t):
     psiTmp/=np.linalg.norm(psiTmp,"fro")
     return psiTmp
 
-dtEst = 0.00005
+dtEst = 5e-5/1e2
 tFlushStart=0
 tFlushStop=0.001
 flushNum=4000

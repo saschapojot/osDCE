@@ -7,7 +7,7 @@ import json
 
 inJsonFileNames=[]
 flushNumAll=[]
-
+testNum=5
 dataPath="./groupNew5/row0/H1Verify/"
 for file in glob.glob(dataPath+"/*.json"):
 
@@ -26,4 +26,4 @@ for file in sortedFileNames:
     diffOneFile=np.array(dataTmp["diff"])
     diffValsAll=np.r_[diffValsAll,diffOneFile]
 
-np.savetxt("jsonCombined.txt",diffValsAll,delimiter=",")
+np.savetxt("test"+str(testNum)+"jsonCombined.txt",diffValsAll,delimiter=",")

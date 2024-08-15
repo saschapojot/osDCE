@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-inFile="./jsonCombined.txt"
+testNum=4
+inFile="test"+str(testNum)+"jsonCombined.txt"
 
 arr=np.loadtxt(inFile)
-dtEst = 0.00005
+dtEst = 1e-5
 tFlushStart=0
 tFlushStop=0.001
 flushNum=4000
@@ -27,9 +27,9 @@ plt.figure()
 plt.plot(t2plt,arr2plt,color="black")
 text_x=np.max(t2plt)*1/5
 text_y=np.max(arr2plt)*4/5
-plt.title("Difference between numerical and analytical solution")
+plt.title("Test"+str(testNum)+": difference between numerical and analytical solution")
 plt.xlabel("$t$")
 plt.ylabel("diff")
 plt.text(text_x, text_y, "$g_{0}=10$, $\omega_{m}=3$, $\omega_{c}=1$, $\omega_{p}=1$", fontsize=12, color='red')
-plt.savefig("t4.png")
+plt.savefig("test"+str(testNum)+"t4.png")
 plt.close()
